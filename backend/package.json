@@ -1,0 +1,38 @@
+{
+    "name": "mcp-cv-server",
+    "version": "1.0.0",
+    "description": "Model Context Protocol server for CV chat and email notifications",
+    "main": "src/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "node --watch src/index.js",
+        "build": "echo 'No build step required'",
+        "test": "echo 'No tests specified'"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^0.4.0",
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "helmet": "^7.1.0",
+        "dotenv": "^16.3.1",
+        "axios": "^1.6.2",
+        "multer": "^1.4.5-lts.1",
+        "pdf-parse": "^1.1.1",
+        "mammoth": "^1.6.0",
+        "nodemailer": "^6.9.7"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    },
+    "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "cv",
+        "resume",
+        "email",
+        "ai"
+    ],
+    "author": "Your Name",
+    "license": "MIT"
+}
