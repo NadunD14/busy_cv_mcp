@@ -11,7 +11,6 @@ const ChatInterface = ({ parsedResume }) => {
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [useGroqAI, setUseGroqAI] = useState(false);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -40,7 +39,7 @@ const ChatInterface = ({ parsedResume }) => {
             const response = await axios.post('/api/chat', {
                 parsedJson: parsedResume,
                 question: input,
-                useGroq: useGroqAI
+                useAI: true // Always use AI (DistilBERT via Hugging Face)
             });
 
             const assistantMessage = {
@@ -114,11 +113,11 @@ const ChatInterface = ({ parsedResume }) => {
                                 <div className="mt-1 text-xs opacity-75 flex items-center justify-between">
                                     <span>Confidence: {Math.round(message.confidence * 100)}%</span>
                                     {message.source && (
-                                        <span className={`px-1 py-0.5 rounded text-xs ${message.source === 'groq'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-blue-100 text-blue-800'
+                                        <span className={`px-1 py-0.5 rounded text-xs ${message.source === 'distilbert'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-blue-100 text-blue-800'
                                             }`}>
-                                            {message.source === 'groq' ? '🤖 AI' : '📋 Rules'}
+                                            {message.source === 'distilbert' ? '🤖 AI' : '📋 Rules'}
                                         </span>
                                     )}
                                 </div>
@@ -146,20 +145,6 @@ const ChatInterface = ({ parsedResume }) => {
 
             {/* Input Form */}
             <form onSubmit={handleSubmit} className="space-y-2">
-                {/* AI Toggle */}
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={useGroqAI}
-                            onChange={(e) => setUseGroqAI(e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Use AI (Groq) for smarter responses</span>
-                        <span className="text-xs text-gray-500">(requires API key)</span>
-                    </label>
-                </div>
-
                 <div className="flex space-x-2">
                     <input
                         type="text"
@@ -178,7 +163,7 @@ const ChatInterface = ({ parsedResume }) => {
                     </button>
                 </div>
                 <p className="text-xs text-gray-500">
-                    Try asking about your experience, skills, education, or contact info
+                    Powered by DistilBERT AI for intelligent question answering
                 </p>
             </form>
         </div>

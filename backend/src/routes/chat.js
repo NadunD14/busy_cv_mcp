@@ -6,7 +6,7 @@ dotenv.config();
 const hf = process.env.HUGGINGFACE_API_TOKEN ? new HfInference(process.env.HUGGINGFACE_API_TOKEN) : null;
 
 export const chatHandler = {
-    async generateAnswer(parsed, question, useAI = false) {
+    async generateAnswer(parsed, question, useAI = true) {
         // If Hugging Face is available and requested, use DistilBERT
         if (useAI && hf) {
             try {
@@ -22,13 +22,13 @@ export const chatHandler = {
     },
 
     async generateDistilBERTAnswer(parsed, question) {
-        // Create a context from the parsed resume data
-        const context = this.buildResumeContext(parsed);
+        // Create a question-specific context from the parsed resume data
+        const context = this.buildQuestionSpecificContext(parsed, question);
 
         try {
             // Use DistilBERT for question answering
             const response = await hf.questionAnswering({
-                model: 'distilbert-base-uncased-distilled-squad',
+                model: 'bert-large-uncased-whole-word-masking-finetuned-squad',
                 inputs: {
                     question: question,
                     context: context
@@ -42,23 +42,54 @@ export const chatHandler = {
                 // Post-process the answer for better formatting
                 let answer = response.answer.trim();
 
-                // If it's a name question and answer looks like a name, format it properly
-                if (question.toLowerCase().includes('name') && answer.length > 0) {
-                    // Capitalize properly if it's a name
-                    answer = answer.split(' ').map(word =>
-                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join(' ');
-                    answer = `Your name is ${answer}`;
-                }
+                // Enhanced answer validation and formatting
+                const questionLower = question.toLowerCase();
 
-                return {
-                    text: answer,
-                    confidence: Math.min(confidence, 0.95), // Cap confidence at 95%
-                    source: 'distilbert'
-                };
+                // if (questionLower.includes('name')) {
+                //     // For name questions, validate the answer looks like a real name
+                //     if (this.isValidName(answer, parsed)) {
+                //         answer = this.formatName(answer);
+                //         answer = `Your name is ${answer}`;
+                //     } else {
+                //         // If extracted answer doesn't look like a name, use structured data
+                //         console.log('DistilBERT extracted invalid name, using structured data');
+                //         return this.generateRuleBasedAnswer(parsed, question);
+                //     }
+                // } else if (questionLower.includes('skill') || questionLower.includes('technology') || questionLower.includes('programming')) {
+                //     // For skills questions, ensure we get a comprehensive answer
+                //     if (answer.length < 10 || !answer.includes(',')) {
+                //         // If the answer is too short or doesn't contain multiple skills, use rule-based
+                //         console.log('DistilBERT skills answer too brief, using rule-based');
+                //         return this.generateRuleBasedAnswer(parsed, question);
+                //     }
+                // } else if (questionLower.includes('education') || questionLower.includes('degree') || questionLower.includes('university')) {
+                //     // For education questions, format properly
+                //     if (answer.length > 5) {
+                //         answer = `Your education: ${answer}`;
+                //     }
+                // } else if (questionLower.includes('experience') || questionLower.includes('work') || questionLower.includes('job')) {
+                //     // For experience questions, ensure comprehensive answer
+                //     if (answer.length < 20) {
+                //         console.log('DistilBERT experience answer too brief, using rule-based');
+                //         return this.generateRuleBasedAnswer(parsed, question);
+                //     }
+                // }
+
+                // Only return AI answer if confidence is reasonable
+                if (confidence > 0) {
+                    return {
+                        text: answer,
+                        confidence: Math.min(confidence, 0.95),
+                        source: 'distilbert'
+                    };
+                } else {
+                    // Low confidence, fall back to rule-based
+                    console.log('Low confidence DistilBERT answer, falling back to rule-based');
+                    return this.generateRuleBasedAnswer(parsed, question);
+                }
             } else {
                 // If DistilBERT can't find a good answer, fall back to rule-based
-                console.log('DistilBERT returned low confidence answer, falling back to rule-based');
+                console.log('DistilBERT returned no answer, falling back to rule-based');
                 return this.generateRuleBasedAnswer(parsed, question);
             }
         } catch (error) {
@@ -68,44 +99,157 @@ export const chatHandler = {
         }
     },
 
-    buildResumeContext(parsed) {
-        // Build a comprehensive context string for DistilBERT
+    buildQuestionSpecificContext(parsed, question) {
+        const questionLower = question.toLowerCase();
         const contextParts = [];
 
-        if (parsed.name) {
-            contextParts.push(`Name: ${parsed.name}`);
+        // For name questions, prioritize name information
+        if (questionLower.includes('name') || questionLower.includes('who are')) {
+            if (parsed.name) {
+                contextParts.push(`The person's name is ${parsed.name}.`);
+            }
+            if (parsed.email) {
+                contextParts.push(`Email address: ${parsed.email}.`);
+            }
+            // Don't include raw text for name questions to avoid confusion
+            return contextParts.join(' ');
         }
 
-        if (parsed.email) {
-            contextParts.push(`Email: ${parsed.email}`);
+        // For skills questions
+        if (questionLower.includes('skill') || questionLower.includes('technology') || questionLower.includes('programming')) {
+            if (parsed.skills && parsed.skills.length > 0) {
+                contextParts.push(`The person has the following technical skills and technologies: ${parsed.skills.join(', ')}.`);
+                contextParts.push(`Programming languages and frameworks include: ${parsed.skills.join(', ')}.`);
+            }
+            // Return focused context for skills questions
+            return contextParts.join(' ');
         }
 
-        if (parsed.phone) {
-            contextParts.push(`Phone: ${parsed.phone}`);
+        // For education questions
+        if (questionLower.includes('education') || questionLower.includes('degree') || questionLower.includes('university') || questionLower.includes('study')) {
+            if (parsed.education && parsed.education.length > 0) {
+                contextParts.push(`Education: ${parsed.education.join('. ')}.`);
+            }
         }
 
-        if (parsed.skills && parsed.skills.length > 0) {
-            contextParts.push(`Skills: ${parsed.skills.join(', ')}`);
+        // For work experience questions
+        if (questionLower.includes('experience') || questionLower.includes('work') || questionLower.includes('job') || questionLower.includes('position') || questionLower.includes('project')) {
+            if (parsed.jobs && parsed.jobs.length > 0) {
+                contextParts.push(`Work experience and projects: ${parsed.jobs.join('. ')}.`);
+            }
         }
 
-        if (parsed.education && parsed.education.length > 0) {
-            contextParts.push(`Education: ${parsed.education.join('. ')}`);
+        // For contact questions
+        if (questionLower.includes('contact') || questionLower.includes('email') || questionLower.includes('phone')) {
+            if (parsed.email) {
+                contextParts.push(`Email: ${parsed.email}.`);
+            }
+            if (parsed.phone) {
+                contextParts.push(`Phone: ${parsed.phone}.`);
+            }
         }
 
-        if (parsed.jobs && parsed.jobs.length > 0) {
-            contextParts.push(`Work Experience: ${parsed.jobs.join('. ')}`);
+        // If no specific context built, use general structured data
+        if (contextParts.length === 0) {
+            if (parsed.name) {
+                contextParts.push(`Name: ${parsed.name}.`);
+            }
+            if (parsed.email) {
+                contextParts.push(`Email: ${parsed.email}.`);
+            }
+            if (parsed.phone) {
+                contextParts.push(`Phone: ${parsed.phone}.`);
+            }
+            if (parsed.skills && parsed.skills.length > 0) {
+                contextParts.push(`Skills: ${parsed.skills.slice(0, 10).join(', ')}.`);
+            }
+            if (parsed.education && parsed.education.length > 0) {
+                contextParts.push(`Education: ${parsed.education.join('. ')}.`);
+            }
+            if (parsed.jobs && parsed.jobs.length > 0) {
+                contextParts.push(`Work experience and projects: ${parsed.jobs.slice(0, 5).join('. ')}.`);
+            }
         }
 
-        // Add raw text as additional context if available
-        if (parsed.raw) {
-            // Limit raw text to avoid context overflow (DistilBERT has input limits)
-            const rawText = parsed.raw.length > 1000
-                ? parsed.raw.substring(0, 1000) + '...'
-                : parsed.raw;
-            contextParts.push(`Additional Information: ${rawText}`);
+        return contextParts.join(' ');
+    },
+
+    isValidName(answer, parsed) {
+        // Check if the answer looks like a valid name
+        const cleanAnswer = answer.trim();
+
+        // Should be 2-50 characters
+        if (cleanAnswer.length < 2 || cleanAnswer.length > 50) {
+            return false;
         }
 
-        return contextParts.join('. ');
+        // Should contain mostly letters and spaces
+        if (!/^[A-Za-z\s\-\.]+$/.test(cleanAnswer)) {
+            return false;
+        }
+
+        // Should not be technical terms commonly found in resumes
+        const technicalTerms = ['python', 'javascript', 'react', 'nodejs', 'tensorflow', 'keras', 'pandas', 'numpy', 'mongodb', 'mysql', 'docker', 'aws', 'git', 'github'];
+        if (technicalTerms.includes(cleanAnswer.toLowerCase())) {
+            return false;
+        }
+
+        // If we have a structured name and it's very different, prefer structured
+        if (parsed.name && parsed.name.toLowerCase() !== cleanAnswer.toLowerCase()) {
+            const similarity = this.calculateSimilarity(parsed.name.toLowerCase(), cleanAnswer.toLowerCase());
+            if (similarity < 0.3) {
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    formatName(name) {
+        return name.split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    },
+
+    calculateSimilarity(str1, str2) {
+        // Simple similarity calculation
+        const longer = str1.length > str2.length ? str1 : str2;
+        const shorter = str1.length > str2.length ? str2 : str1;
+
+        if (longer.length === 0) {
+            return 1.0;
+        }
+
+        const editDistance = this.levenshteinDistance(longer, shorter);
+        return (longer.length - editDistance) / longer.length;
+    },
+
+    levenshteinDistance(str1, str2) {
+        const matrix = [];
+
+        for (let i = 0; i <= str2.length; i++) {
+            matrix[i] = [i];
+        }
+
+        for (let j = 0; j <= str1.length; j++) {
+            matrix[0][j] = j;
+        }
+
+        for (let i = 1; i <= str2.length; i++) {
+            for (let j = 1; j <= str1.length; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+
+        return matrix[str2.length][str1.length];
     },
 
     generateRuleBasedAnswer(parsed, question) {

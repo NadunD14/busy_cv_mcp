@@ -244,12 +244,12 @@ app.post('/api/parse', async (req, res) => {
 app.post('/api/chat', async (req, res) => {
     try {
         console.log('Chat request received');
-        const { parsedJson, question, useGroq = false } = req.body;
+        const { parsedJson, question, useAI = false } = req.body;
         if (!parsedJson || !question) {
             return res.status(400).json({ error: 'parsedJson and question are required' });
         }
 
-        const response = await chatHandler.generateAnswer(parsedJson, question, useGroq);
+        const response = await chatHandler.generateAnswer(parsedJson, question, useAI);
         res.json(response);
     } catch (error) {
         console.error('Chat error:', error);
