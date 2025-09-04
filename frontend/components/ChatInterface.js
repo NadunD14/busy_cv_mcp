@@ -11,6 +11,7 @@ const ChatInterface = ({ parsedResume }) => {
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [useGroqAI, setUseGroqAI] = useState(false);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -38,13 +39,15 @@ const ChatInterface = ({ parsedResume }) => {
         try {
             const response = await axios.post('/api/chat', {
                 parsedJson: parsedResume,
-                question: input
+                question: input,
+                useGroq: useGroqAI
             });
 
             const assistantMessage = {
                 type: 'assistant',
                 content: response.data.answer,
                 confidence: response.data.confidence,
+                source: response.data.source,
                 timestamp: new Date()
             };
 
@@ -102,14 +105,22 @@ const ChatInterface = ({ parsedResume }) => {
                     >
                         <div
                             className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.type === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-800 border'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-800 border'
                                 }`}
                         >
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                             {message.confidence && (
-                                <div className="mt-1 text-xs opacity-75">
-                                    Confidence: {Math.round(message.confidence * 100)}%
+                                <div className="mt-1 text-xs opacity-75 flex items-center justify-between">
+                                    <span>Confidence: {Math.round(message.confidence * 100)}%</span>
+                                    {message.source && (
+                                        <span className={`px-1 py-0.5 rounded text-xs ${message.source === 'groq'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-blue-100 text-blue-800'
+                                            }`}>
+                                            {message.source === 'groq' ? '🤖 AI' : '📋 Rules'}
+                                        </span>
+                                    )}
                                 </div>
                             )}
                             <div className="text-xs opacity-75 mt-1">
@@ -135,6 +146,20 @@ const ChatInterface = ({ parsedResume }) => {
 
             {/* Input Form */}
             <form onSubmit={handleSubmit} className="space-y-2">
+                {/* AI Toggle */}
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center space-x-2 text-sm">
+                        <input
+                            type="checkbox"
+                            checked={useGroqAI}
+                            onChange={(e) => setUseGroqAI(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>Use AI (Groq) for smarter responses</span>
+                        <span className="text-xs text-gray-500">(requires API key)</span>
+                    </label>
+                </div>
+
                 <div className="flex space-x-2">
                     <input
                         type="text"

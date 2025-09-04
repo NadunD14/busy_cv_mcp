@@ -1,5 +1,65 @@
+import Groq from 'groq-sdk';
+
+// Initialize Groq client
+const groq = process.env.GROQ_API_KEY ? new Groq({
+    apiKey: process.env.GROQ_API_KEY
+}) : null;
+
 export const chatHandler = {
-    generateAnswer(parsed, question) {
+    async generateAnswer(parsed, question, useGroq = false) {
+        // If Groq is available and requested, use AI
+        if (useGroq && groq) {
+            try {
+                return await this.generateGroqAnswer(parsed, question);
+            } catch (error) {
+                console.error('Groq AI error, falling back to rule-based:', error);
+                // Fall back to rule-based system
+            }
+        }
+
+        // Rule-based system (existing logic)
+        return this.generateRuleBasedAnswer(parsed, question);
+    },
+
+    async generateGroqAnswer(parsed, question) {
+        const systemPrompt = `You are a CV/Resume assistant. You have access to a parsed resume with the following information:
+
+Name: ${parsed.name || 'Not specified'}
+Email: ${parsed.email || 'Not specified'}  
+Phone: ${parsed.phone || 'Not specified'}
+Skills: ${parsed.skills ? parsed.skills.join(', ') : 'Not specified'}
+Education: ${parsed.education ? parsed.education.join(', ') : 'Not specified'}
+Work Experience: ${parsed.jobs ? parsed.jobs.join('\n') : 'Not specified'}
+
+Raw Resume Text:
+${parsed.raw || 'No raw text available'}
+
+Please answer questions about this resume professionally and concisely. If information is not available in the resume, say so clearly.`;
+
+        const completion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
+                {
+                    role: "user",
+                    content: question
+                }
+            ],
+            model: "llama-3.1-70b-versatile", // Fast and capable model
+            temperature: 0.3, // Lower temperature for more consistent responses
+            max_tokens: 500
+        });
+
+        return {
+            text: completion.choices[0]?.message?.content || "I couldn't generate a response.",
+            confidence: 0.9,
+            source: 'groq'
+        };
+    },
+
+    generateRuleBasedAnswer(parsed, question) {
         const questionLower = question.toLowerCase();
 
         // Last position/job questions

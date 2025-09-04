@@ -12,6 +12,8 @@ interface EmailResponse {
     messageId?: string;
 }
 
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<EmailResponse | { error: string }>
@@ -33,31 +35,31 @@ export default async function handler(
             return res.status(400).json({ error: 'Invalid email address' });
         }
 
-        // Simple API key protection
-        if (process.env.API_KEY && req.headers['x-api-key'] !== process.env.API_KEY) {
-            return res.status(403).json({ error: 'Forbidden - Invalid API key' });
-        }
+        // Forward request to backend
+        const backendResponse = await axios.post(`${BACKEND_URL}/api/send-email`, {
+            to,
+            subject,
+            body
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                // Add API key if configured
+                ...(process.env.API_KEY && { 'x-api-key': process.env.API_KEY })
+            },
+            timeout: 15000 // 15 seconds timeout for email sending
+        });
 
-        // Check if MailerSend is configured
-        if (process.env.MAILERSEND_API_KEY) {
-            const result = await sendWithMailerSend(to, subject, body);
-            return res.json(result);
-        }
-
-        // Check if Brevo is configured
-        if (process.env.BREVO_API_KEY) {
-            const result = await sendWithBrevo(to, subject, body);
-            return res.json(result);
-        }
-
-        return res.status(500).json({ error: 'No email service configured' });
+        return res.json({
+            success: backendResponse.data.success,
+            messageId: backendResponse.data.messageId
+        });
 
     } catch (error) {
         console.error('Email API error:', error);
 
         if (axios.isAxiosError(error)) {
             const status = error.response?.status || 500;
-            const message = error.response?.data?.message || 'Email service error';
+            const message = error.response?.data?.error || 'Backend service error';
             return res.status(status).json({ error: message });
         }
 
@@ -65,56 +67,4 @@ export default async function handler(
     }
 }
 
-async function sendWithMailerSend(to: string, subject: string, body: string): Promise<EmailResponse> {
-    const response = await axios.post(
-        'https://api.mailersend.com/v1/email',
-        {
-            from: {
-                email: process.env.EMAIL_FROM,
-                name: process.env.EMAIL_FROM_NAME || 'MCP CV Assistant'
-            },
-            to: [{ email: to }],
-            subject,
-            text: body,
-            html: body.replace(/\n/g, '<br>')
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        }
-    );
 
-    return {
-        success: true,
-        messageId: response.headers['x-message-id']
-    };
-}
-
-async function sendWithBrevo(to: string, subject: string, body: string): Promise<EmailResponse> {
-    const response = await axios.post(
-        'https://api.brevo.com/v3/smtp/email',
-        {
-            sender: {
-                email: process.env.EMAIL_FROM,
-                name: process.env.EMAIL_FROM_NAME || 'MCP CV Assistant'
-            },
-            to: [{ email: to }],
-            subject,
-            textContent: body,
-            htmlContent: body.replace(/\n/g, '<br>')
-        },
-        {
-            headers: {
-                'api-key': process.env.BREVO_API_KEY,
-                'Content-Type': 'application/json'
-            }
-        }
-    );
-
-    return {
-        success: true,
-        messageId: response.data.messageId
-    };
-}

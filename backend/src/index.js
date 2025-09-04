@@ -13,6 +13,7 @@ import dotenv from 'dotenv';
 import { chatHandler } from './routes/chat.js';
 import { emailHandler } from './routes/email.js';
 import { parseHandler } from './routes/parse.js';
+import mailerService from './services/mailer.js';
 
 dotenv.config();
 
@@ -68,6 +69,11 @@ class CVServer {
                                     type: 'string',
                                     description: 'Question about the resume',
                                 },
+                                useGroq: {
+                                    type: 'boolean',
+                                    description: 'Use Groq AI for more intelligent responses (requires GROQ_API_KEY)',
+                                    default: false
+                                }
                             },
                             required: ['parsedResume', 'question'],
                         },
@@ -147,8 +153,8 @@ class CVServer {
     }
 
     async handleChatAboutResume(args) {
-        const { parsedResume, question } = args;
-        const response = chatHandler.generateAnswer(parsedResume, question);
+        const { parsedResume, question, useGroq = false } = args;
+        const response = await chatHandler.generateAnswer(parsedResume, question, useGroq);
 
         return {
             content: [
@@ -237,12 +243,13 @@ app.post('/api/parse', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
     try {
-        const { parsedJson, question } = req.body;
+        console.log('Chat request received');
+        const { parsedJson, question, useGroq = false } = req.body;
         if (!parsedJson || !question) {
             return res.status(400).json({ error: 'parsedJson and question are required' });
         }
 
-        const response = chatHandler.generateAnswer(parsedJson, question);
+        const response = await chatHandler.generateAnswer(parsedJson, question, useGroq);
         res.json(response);
     } catch (error) {
         console.error('Chat error:', error);
@@ -262,11 +269,16 @@ app.post('/api/send-email', async (req, res) => {
             return res.status(403).json({ error: 'Forbidden - Invalid API key' });
         }
 
-        const result = await emailHandler.sendEmail(to, subject, body);
-        res.json({ success: true, messageId: result.messageId });
+        // Use the new mailer service
+        const result = await mailerService.sendTextEmail(to, subject, body);
+        res.json({
+            success: result.success,
+            messageId: result.messageId,
+            provider: result.provider
+        });
     } catch (error) {
         console.error('Email error:', error);
-        res.status(500).json({ error: 'Failed to send email' });
+        res.status(500).json({ error: error.message || 'Failed to send email' });
     }
 });
 

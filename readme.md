@@ -1,34 +1,41 @@
 # MCP CV Assistant 🤖📄
 
-A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications, built entirely on free tiers.
+A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **Groq AI integration** for enhanced chat responses!
 
 ## Features ✨
 
 - **📄 Resume Chat**: Parse your CV/resume and chat about your experience
+- **🤖 AI-Powered Responses**: Optional Groq AI for smarter, contextual answers
 - **📧 Email Notifications**: Send professional emails with templates
 - **🎨 Next.js Playground**: Modern web interface for easy interaction
-- **🔒 Free Deployment**: Designed to work with free tiers only
+- **🔒 Separate Services**: Frontend and backend properly separated for scalability
 - **⚡ Real-time**: Instant resume parsing and responses
 
 ## Architecture 🏗️
 
-### Frontend (Next.js)
-- Client-side resume parsing (PDF, DOCX, TXT)
-- Real-time chat interface
-- Email composition with templates
-- Responsive design with Tailwind CSS
+### Frontend (Next.js) - Port 3000
+- **API Proxy Layer**: Routes requests to backend server
+- **Client-side Parsing**: PDF, DOCX, TXT file support
+- **Real-time Chat**: With AI toggle for enhanced responses
+- **Email Interface**: Professional templates and composition
+- **Responsive Design**: Tailwind CSS with modern UI
 
-### Backend (MCP Server)
-- Model Context Protocol implementation
-- Rule-based CV question answering
-- Multi-provider email sending (MailerSend/Brevo/SMTP)
-- RESTful API endpoints
+### Backend (MCP Server) - Port 3001
+- **Dual Mode Operation**:
+  - HTTP Server: REST API endpoints for frontend
+  - MCP Server: Model Context Protocol for AI clients
+- **Smart Chat System**:
+  - Rule-based responses (fast, always available)
+  - Groq AI integration (intelligent, contextual)
+- **Multi-provider Email**: SendGrid/MailerSend/Brevo/SMTP support
+- **Resume Parsing**: Structured data extraction
 
-### Free Services Used 💰
-- **Hosting**: Vercel (Frontend) / Railway (Backend)
-- **Email**: MailerSend (3,000/month) or Brevo (300/day)
-- **Database**: Supabase (optional, 500MB free)
-- **Parsing**: Client-side libraries (pdfjs-dist, mammoth)
+### Service Integration 🔗
+```
+Frontend (3000) → API Proxy → Backend (3001) → External Services
+                                     ↓
+                               [Groq AI] [Email APIs]
+```
 
 ## Quick Start 🚀
 
@@ -54,59 +61,140 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Configure your email provider (choose one):
+Configure your services:
 
-#### Option A: MailerSend (3,000 emails/month free)
+#### Required: Email Provider (choose one)
+
+**Option A: SendGrid (Recommended - 100 emails/day free)**
+1. Sign up at [SendGrid](https://sendgrid.com/)
+2. Complete sender authentication (verify your domain or single sender email)
+3. Get your API key from Settings → API Keys
+4. Update `.env`:
+```env
+SENDGRID_API_KEY=your_sendgrid_api_key
+EMAIL_FROM=your_verified_email@domain.com
+EMAIL_FROM_NAME=CV Assistant
+```
+
+📘 **Need help with SendGrid setup?** See the detailed [SendGrid Setup Guide](SENDGRID_SETUP.md)
+
+**Option B: MailerSend (3,000 emails/month free)**
 1. Sign up at [MailerSend](https://www.mailersend.com/)
 2. Verify your domain or use their sandbox
-3. Get your API key
+3. Get your API key from Settings → API Tokens
 4. Update `.env`:
 ```env
 MAILERSEND_API_KEY=your_mailersend_api_key
 EMAIL_FROM=your_verified_email@domain.com
+EMAIL_FROM_NAME=CV Assistant
 ```
 
-#### Option B: Brevo (300 emails/day free)
+**Option C: Brevo (300 emails/day free)**
 1. Sign up at [Brevo](https://www.brevo.com/)
-2. Get your API key
+2. Get your API key from Account → SMTP & API
 3. Update `.env`:
 ```env
 BREVO_API_KEY=your_brevo_api_key
 EMAIL_FROM=your_verified_email@domain.com
+EMAIL_FROM_NAME=CV Assistant
+```
+
+#### Optional: Groq AI (Enhanced Chat)
+1. Sign up at [Groq Console](https://console.groq.com/) - **FREE**
+2. Get your API key
+3. Update `.env`:
+```env
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ### 3. Run Development Servers
 
 ```bash
-# Terminal 1: Frontend
-cd frontend
-npm run dev
-
-# Terminal 2: Backend
+# Terminal 1: Backend (MUST start first)
 cd backend
 npm run dev
+# Backend runs on http://localhost:3001
+
+# Terminal 2: Frontend
+cd frontend  
+npm run dev
+# Frontend runs on http://localhost:3000
+```
+
+### 4. Test Connection
+
+```bash
+# Test backend directly
+cd backend
+node test-connection.js
+
+# Test frontend-to-backend
+curl http://localhost:3000/api/chat -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"parsedJson":{"skills":["JavaScript"]},"question":"What skills do I have?"}'
 ```
 
 Visit `http://localhost:3000` to use the application!
 
 ## Usage Guide 📖
 
-### Uploading a Resume
-1. Drag & drop or click to upload your CV (PDF, DOCX, or TXT)
-2. Wait for parsing to complete
-3. Review the extracted information
+### 1. Upload Your Resume
+1. Visit `http://localhost:3000`
+2. Drag & drop or click to upload your CV (PDF, DOCX, or TXT)
+3. Wait for client-side parsing to complete
+4. Review the extracted information displayed
 
-### Chatting About Your Resume
-Ask questions like:
+### 2. Chat About Your Resume
+**Two Response Modes:**
+
+**📋 Rule-based (Default - Fast)**
+- Instant responses using pattern matching
+- Always available, no API key needed
+- Good for basic questions
+
+**🤖 AI-powered (Toggle ON for smarter responses)**
+- Uses Groq AI for contextual understanding
+- Requires `GROQ_API_KEY` in environment
+- Better for complex or nuanced questions
+
+**Sample Questions:**
 - "What role did I have at my last position?"
-- "What are my key skills?"
-- "Tell me about my work experience"
-- "What's my contact information?"
+- "What are my key programming skills?"
+- "Tell me about my education background"
+- "How many years of experience do I have?"
+- "What projects have I worked on?"
 
-### Sending Emails
-1. Choose a template or write custom content
-2. Fill in recipient, subject, and message
-3. Click send (requires email service setup)
+### 3. Send Professional Emails
+1. Use built-in templates (introduction, follow-up, thank you)
+2. Customize recipient, subject, and message
+3. Click send (requires email service configuration)
+
+### 4. Technical Flow
+```
+1. Upload Resume → Client-side parsing (frontend)
+2. Ask Question → Frontend /api/chat → Backend chat API → Response
+3. Send Email → Frontend /api/send-email → Backend email API → Email Service
+```
+
+## Connection Architecture 🔗
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Frontend      │────▶│   Backend       │────▶│  External APIs  │
+│   (Port 3000)   │     │   (Port 3001)   │     │                 │
+├─────────────────┤     ├─────────────────┤     ├─────────────────┤
+│ • UI/UX         │     │ • REST API      │     │ • Groq AI       │
+│ • File parsing  │     │ • MCP Server    │     │ • SendGrid      │
+│ • API proxy     │     │ • Business Logic│     │ • MailerSend    │
+│                 │     │                 │     │ • Brevo         │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+**API Endpoints:**
+- `POST /api/chat` - Chat about resume (with optional Groq AI)
+- `POST /api/send-email` - Send email notifications  
+- `POST /api/parse` - Parse resume text (proxied to backend)
+- `GET /health` - Backend health check
 
 ## Deployment 🌐
 
@@ -189,6 +277,7 @@ When running as an MCP server (`npm start -- --mcp`):
 
 | Variable | Description | Required |
 |----------|-------------|----------|
+| `SENDGRID_API_KEY` | SendGrid API key | One email provider |
 | `MAILERSEND_API_KEY` | MailerSend API key | One email provider |
 | `BREVO_API_KEY` | Brevo API key | One email provider |
 | `EMAIL_FROM` | Verified sender email | Yes |

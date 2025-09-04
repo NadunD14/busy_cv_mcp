@@ -1,5 +1,6 @@
 import axios from 'axios';
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 export const emailHandler = {
     async sendEmail(to, subject, body) {
@@ -9,7 +10,12 @@ export const emailHandler = {
             throw new Error('Invalid email address');
         }
 
-        // Try MailerSend first
+        // Try SendGrid first
+        if (process.env.SENDGRID_API_KEY) {
+            return await this.sendWithSendGrid(to, subject, body);
+        }
+
+        // Try MailerSend next
         if (process.env.MAILERSEND_API_KEY) {
             return await this.sendWithMailerSend(to, subject, body);
         }
@@ -24,7 +30,44 @@ export const emailHandler = {
             return await this.sendWithSMTP(to, subject, body);
         }
 
-        throw new Error('No email service configured. Please set up MailerSend, Brevo, or SMTP credentials.');
+        throw new Error('No email service configured. Please set up SendGrid, MailerSend, Brevo, or SMTP credentials.');
+    },
+
+    async sendWithSendGrid(to, subject, body) {
+        try {
+            // Set the API key
+            sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+            const msg = {
+                to: to,
+                from: {
+                    email: process.env.EMAIL_FROM,
+                    name: process.env.EMAIL_FROM_NAME || 'MCP CV Assistant'
+                },
+                subject: subject,
+                text: body,
+                html: body.replace(/\n/g, '<br>')
+            };
+
+            const response = await sgMail.send(msg);
+
+            return {
+                success: true,
+                messageId: response[0].headers['x-message-id'] || 'sendgrid-sent',
+                provider: 'SendGrid'
+            };
+        } catch (error) {
+            console.error('SendGrid error:', error.response?.body || error.message);
+
+            // Handle SendGrid specific errors
+            if (error.response) {
+                const { body } = error.response;
+                const errorMessage = body?.errors?.[0]?.message || body?.message || 'Unknown SendGrid error';
+                throw new Error(`SendGrid failed: ${errorMessage}`);
+            }
+
+            throw new Error(`SendGrid failed: ${error.message}`);
+        }
     },
 
     async sendWithMailerSend(to, subject, body) {
