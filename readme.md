@@ -1,11 +1,11 @@
 # MCP CV Assistant 🤖📄
 
-A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **Groq AI integration** for enhanced chat responses!
+A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **DistilBERT AI integration** for enhanced chat responses!
 
 ## Features ✨
 
 - **📄 Resume Chat**: Parse your CV/resume and chat about your experience
-- **🤖 AI-Powered Responses**: Optional Groq AI for smarter, contextual answers
+- **🤖 AI-Powered Responses**: Optional DistilBERT AI for smarter, contextual answers
 - **📧 Email Notifications**: Send professional emails with templates
 - **🎨 Next.js Playground**: Modern web interface for easy interaction
 - **🔒 Separate Services**: Frontend and backend properly separated for scalability
@@ -26,7 +26,7 @@ A Model Context Protocol (MCP) server that provides AI-powered resume chat funct
   - MCP Server: Model Context Protocol for AI clients
 - **Smart Chat System**:
   - Rule-based responses (fast, always available)
-  - Groq AI integration (intelligent, contextual)
+  - DistilBERT AI integration (intelligent, contextual question answering)
 - **Multi-provider Email**: SendGrid/MailerSend/Brevo/SMTP support
 - **Resume Parsing**: Structured data extraction
 
@@ -34,7 +34,7 @@ A Model Context Protocol (MCP) server that provides AI-powered resume chat funct
 ```
 Frontend (3000) → API Proxy → Backend (3001) → External Services
                                      ↓
-                               [Groq AI] [Email APIs]
+                               [DistilBERT AI] [Email APIs]
 ```
 
 ## Quick Start 🚀
@@ -99,12 +99,12 @@ EMAIL_FROM=your_verified_email@domain.com
 EMAIL_FROM_NAME=CV Assistant
 ```
 
-#### Optional: Groq AI (Enhanced Chat)
-1. Sign up at [Groq Console](https://console.groq.com/) - **FREE**
-2. Get your API key
+#### Optional: Hugging Face AI (Enhanced Chat)
+1. Sign up at [Hugging Face](https://huggingface.co/) - **FREE**
+2. Get your API token from Settings → Access Tokens
 3. Update `.env`:
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+HUGGINGFACE_API_TOKEN=your_huggingface_api_token_here
 ```
 
 ### 3. Run Development Servers
@@ -153,8 +153,8 @@ Visit `http://localhost:3000` to use the application!
 - Good for basic questions
 
 **🤖 AI-powered (Toggle ON for smarter responses)**
-- Uses Groq AI for contextual understanding
-- Requires `GROQ_API_KEY` in environment
+- Uses DistilBERT for contextual question answering
+- Requires `HUGGINGFACE_API_TOKEN` in environment
 - Better for complex or nuanced questions
 
 **Sample Questions:**
@@ -183,7 +183,7 @@ Visit `http://localhost:3000` to use the application!
 │   Frontend      │────▶│   Backend       │────▶│  External APIs  │
 │   (Port 3000)   │     │   (Port 3001)   │     │                 │
 ├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ • UI/UX         │     │ • REST API      │     │ • Groq AI       │
+│ • UI/UX         │     │ • REST API      │     │ • DistilBERT AI │
 │ • File parsing  │     │ • MCP Server    │     │ • SendGrid      │
 │ • API proxy     │     │ • Business Logic│     │ • MailerSend    │
 │                 │     │                 │     │ • Brevo         │
@@ -191,7 +191,7 @@ Visit `http://localhost:3000` to use the application!
 ```
 
 **API Endpoints:**
-- `POST /api/chat` - Chat about resume (with optional Groq AI)
+- `POST /api/chat` - Chat about resume (with optional DistilBERT AI)
 - `POST /api/send-email` - Send email notifications  
 - `POST /api/parse` - Parse resume text (proxied to backend)
 - `GET /health` - Backend health check
