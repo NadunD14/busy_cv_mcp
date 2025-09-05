@@ -1,0 +1,7 @@
+frontend/
+.git/
+.nixpacks/
+nixpacks.toml
+docker-compose.yml
+README.md
+*.md
