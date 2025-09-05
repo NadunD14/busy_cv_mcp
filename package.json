@@ -1,0 +1,15 @@
+{
+  "name": "busy-cv-mcp",
+  "version": "1.0.0",
+  "description": "MCP CV Assistant - Backend and Frontend",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "build": "cd backend && npm install"
+  },
+  "keywords": ["mcp", "cv", "assistant", "nodejs", "nextjs"],
+  "author": "Nadun Sandanayaka",
+  "license": "MIT"
+}
