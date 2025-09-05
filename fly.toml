@@ -7,18 +7,16 @@ app = "busy-cv-backend"
 primary_region = "sin" # Singapore - closest to your region
 
 [build]
-  dockerfile = "backend/Dockerfile"
+  dockerfile = "backend/DockerFile"
 
 [env]
   NODE_ENV = "production"
   PORT = "8080"
 
 [[services]]
-  http_checks = []
   internal_port = 8080
   processes = ["app"]
   protocol = "tcp"
-  script_checks = []
 
   [services.concurrency]
     hard_limit = 25
