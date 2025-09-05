@@ -212,16 +212,25 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:3000',
+        'https://busy-cv.vercel.app',
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
+    credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
 app.get('/health', (req, res) => {
     res.json({
-        status: 'ok',
+        status: 'OK',
+        message: 'MCP CV Server is running',
         service: 'CV Assistant MCP Server',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
