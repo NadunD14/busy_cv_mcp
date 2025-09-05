@@ -1,6 +1,7 @@
 node_modules
 npm-debug.log
 .env
+.env.local
 .git
 .gitignore
 README.md
@@ -8,3 +9,9 @@ Dockerfile
 .dockerignore
 uploads/*
 !uploads/.gitkeep
+*.md
+.DS_Store
+.vscode
+coverage
+.nyc_output
+*.log

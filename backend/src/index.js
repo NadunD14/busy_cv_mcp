@@ -216,6 +216,7 @@ app.use(cors({
     origin: [
         'http://localhost:3000',
         'https://busy-cv.vercel.app',
+        'https://busy-cv-backend.fly.dev',
         process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true
