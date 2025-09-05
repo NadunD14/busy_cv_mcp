@@ -6,13 +6,13 @@ interface ChatRequest {
     parsedJson: ParsedResume;
     question: string;
     parsedId?: string;
-    useGroq?: boolean; // New field for AI integration
+    useAI?: boolean; // New field for DistilBERT AI integration
 }
 
 interface ChatResponse {
     answer: string;
     confidence: number;
-    source?: string; // 'backend' | 'groq'
+    source?: string; // 'backend' | 'distilbert'
 }
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
@@ -26,8 +26,8 @@ export default async function handler(
     }
 
     try {
-        const { parsedJson, question, useGroq = false }: ChatRequest = req.body;
-
+        const { parsedJson, question, useAI = true }: ChatRequest = req.body;
+        console.log('parsedJson:', parsedJson);
         if (!parsedJson || !question) {
             return res.status(400).json({ error: 'parsedJson and question are required' });
         }
@@ -36,7 +36,7 @@ export default async function handler(
         const backendResponse = await axios.post(`${BACKEND_URL}/api/chat`, {
             parsedJson,
             question,
-            useGroq // Pass the AI preference to backend
+            useAI // Pass the AI preference to backend
         }, {
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export default async function handler(
         return res.json({
             answer: backendResponse.data.text || backendResponse.data.answer,
             confidence: backendResponse.data.confidence || 0.8,
-            source: useGroq ? 'groq' : 'backend'
+            source: useAI ? 'distilbert' : 'backend'
         });
 
     } catch (error) {
