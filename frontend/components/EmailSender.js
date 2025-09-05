@@ -213,23 +213,6 @@ Best regards,
                     </div>
                 </div>
             )}
-
-            {/* Setup Instructions */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">⚙️ SendGrid Email Service Setup:</h4>
-                <div className="text-sm text-blue-800 space-y-1">
-                    <p>This application uses SendGrid for email delivery.</p>
-                    <p><strong>Required configuration in backend .env:</strong></p>
-                    <ul className="list-disc list-inside ml-2 space-y-1">
-                        <li><code>SENDGRID_API_KEY</code> - Your SendGrid API key</li>
-                        <li><code>EMAIL_FROM</code> - Your verified sender email address</li>
-                        <li><code>EMAIL_FROM_NAME</code> - Display name for emails (optional)</li>
-                    </ul>
-                    <p className="mt-2">
-                        <strong>Note:</strong> You must verify your sender email address in SendGrid dashboard before sending emails.
-                    </p>
-                </div>
-            </div>
         </div>
     );
 };
