@@ -1,11 +1,11 @@
 # MCP CV Assistant 🤖📄
 
-A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **OpenAI GPT integration** for enhanced chat responses!
+A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **Cohere Command integration** for enhanced chat responses!
 
 ## Features ✨
 
 - **📄 Resume Chat**: Parse your CV/resume and chat about your experience
-- **🤖 AI-Powered Responses**: Optional OpenAI GPT-3.5/GPT-4 for smarter, contextual answers
+- **🤖 AI-Powered Responses**: Optional Cohere Command for smarter, contextual answers
 - **📧 Email Notifications**: Send professional emails with templates
 - **🎨 Next.js Playground**: Modern web interface for easy interaction
 - **🔒 Separate Services**: Frontend and backend properly separated for scalability
@@ -26,7 +26,7 @@ A Model Context Protocol (MCP) server that provides AI-powered resume chat funct
   - MCP Server: Model Context Protocol for AI clients
 - **Smart Chat System**:
   - Rule-based responses (fast, always available)
-  - OpenAI GPT integration (intelligent, contextual question answering)
+  - Cohere Command integration (intelligent, contextual question answering)
 - **Multi-provider Email**: SendGrid/MailerSend/Brevo/SMTP support
 - **Resume Parsing**: Structured data extraction
 
@@ -34,7 +34,7 @@ A Model Context Protocol (MCP) server that provides AI-powered resume chat funct
 ```
 Frontend (3000) → API Proxy → Backend (3001) → External Services
                                      ↓
-                               [OpenAI GPT] [Email APIs]
+                               [Cohere Command] [Email APIs]
 ```
 
 ## Quick Start 🚀
@@ -99,12 +99,12 @@ EMAIL_FROM=your_verified_email@domain.com
 EMAIL_FROM_NAME=CV Assistant
 ```
 
-#### Optional: OpenAI GPT (Enhanced Chat)
-1. Sign up at [OpenAI Platform](https://platform.openai.com/) - **$5 Free Credits**
-2. Get your API key from [API Keys](https://platform.openai.com/api-keys)
+#### Optional: Cohere Command (Enhanced Chat)
+1. Sign up at [Cohere Dashboard](https://dashboard.cohere.com/) - **1000 Free API Calls/Month**
+2. Get your API key from [API Keys](https://dashboard.cohere.com/api-keys)
 3. Update `.env`:
 ```env
-OPENAI_API_KEY=sk-your_openai_api_key_here
+COHERE_API_KEY=your_cohere_api_key_here
 ```
 
 ### 3. Run Development Servers
@@ -153,8 +153,8 @@ Visit `http://localhost:3000` to use the application!
 - Good for basic questions
 
 **🤖 AI-powered (Toggle ON for smarter responses)**
-- Uses OpenAI GPT-3.5/GPT-4 for contextual question answering
-- Requires `OPENAI_API_KEY` in environment
+- Uses Cohere Command for contextual question answering
+- Requires `COHERE_API_KEY` in environment
 - Better for complex or nuanced questions
 
 **Sample Questions:**
@@ -183,7 +183,7 @@ Visit `http://localhost:3000` to use the application!
 │   Frontend      │────▶│   Backend       │────▶│  External APIs  │
 │   (Port 3000)   │     │   (Port 3001)   │     │                 │
 ├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ • UI/UX         │     │ • REST API      │     │ • OpenAI GPT    │
+│ • UI/UX         │     │ • REST API      │     │ • Cohere Command│
 │ • File parsing  │     │ • MCP Server    │     │ • SendGrid      │
 │ • API proxy     │     │ • Business Logic│     │ • MailerSend    │
 │                 │     │                 │     │ • Brevo         │
@@ -191,7 +191,7 @@ Visit `http://localhost:3000` to use the application!
 ```
 
 **API Endpoints:**
-- `POST /api/chat` - Chat about resume (with optional OpenAI GPT)
+- `POST /api/chat` - Chat about resume (with optional Cohere Command)
 - `POST /api/send-email` - Send email notifications  
 - `POST /api/parse` - Parse resume text (proxied to backend)
 - `GET /health` - Backend health check

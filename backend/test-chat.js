@@ -63,9 +63,9 @@ async function testChatResponses() {
         }
     }
 
-    // Test OpenAI GPT if available
-    if (process.env.OPENAI_API_KEY) {
-        console.log('\n\n🤖 Testing OpenAI GPT Responses (useAI = true):');
+    // Test Cohere Command if available
+    if (process.env.COHERE_API_KEY) {
+        console.log('\n\n🤖 Testing Cohere Command Responses (useAI = true):');
         console.log('='.repeat(60));
 
         for (const question of testQuestions.slice(0, 3)) { // Test first 3 questions only
@@ -76,8 +76,8 @@ async function testChatResponses() {
                 console.log(`📊 Confidence: ${(response.confidence * 100).toFixed(0)}%`);
                 console.log(`🔧 Source: ${response.source}`);
 
-                if (response.source === 'openai') {
-                    console.log(`🎯 OpenAI GPT successfully provided answer!`);
+                if (response.source === 'cohere') {
+                    console.log(`🎯 Cohere Command successfully provided answer!`);
                 } else if (response.source === 'rule-based') {
                     console.log(`⚠️  AI fell back to rule-based system`);
                 }
@@ -87,10 +87,10 @@ async function testChatResponses() {
             }
         }
     } else {
-        console.log('\n\n🤖 OpenAI GPT Testing Skipped');
+        console.log('\n\n🤖 Cohere Command Testing Skipped');
         console.log('='.repeat(60));
-        console.log('💡 To test AI responses, set OPENAI_API_KEY in your .env file');
-        console.log('🔗 Get your API key at: https://platform.openai.com/api-keys');
+        console.log('💡 To test AI responses, set COHERE_API_KEY in your .env file');
+        console.log('🔗 Get your API key at: https://dashboard.cohere.com/api-keys');
         console.log('📋 Copy .env.example to .env and add your API key');
     }
 
@@ -100,10 +100,10 @@ async function testChatResponses() {
     console.log('✅ Name extraction enhanced');
     console.log('✅ Fallback logic optimized');
 
-    if (process.env.OPENAI_API_KEY) {
-        console.log('✅ OpenAI GPT-powered responses tested');
+    if (process.env.COHERE_API_KEY) {
+        console.log('✅ Cohere Command-powered responses tested');
     } else {
-        console.log('⚠️  OpenAI GPT-powered responses not tested (no API key)');
+        console.log('⚠️  Cohere Command-powered responses not tested (no API key)');
     }
 }
 

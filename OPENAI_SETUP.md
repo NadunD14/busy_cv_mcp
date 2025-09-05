@@ -1,120 +1,65 @@
-# OpenAI GPT Setup Guide
+# ⚠️ DEPRECATED: OpenAI GPT Setup Guide
 
-This guide will help you set up OpenAI's GPT models for enhanced question answering in the MCP CV Assistant.
+**This setup guide is no longer valid. The project has been migrated to use Cohere Command.**
 
-## Why OpenAI GPT?
+## Migration Notice
 
-- **🚀 Powerful and Versatile** - GPT-3.5-turbo and GPT-4 provide excellent natural language understanding
-- **🎯 Superior Context Understanding** - Better at understanding complex questions and providing relevant answers
-- **🆓 Free Tier Available** - OpenAI provides free credits for new users
-- **📚 Well-documented** - Extensive documentation and community support
-- **🔒 Reliable** - Industry-standard API with high uptime
+This project previously used OpenAI's GPT models but has been **migrated to Cohere Command** for better cost efficiency and generous free tiers.
 
-## Setup Steps
+### What Changed?
+- ❌ **Removed**: OpenAI GPT integration
+- ✅ **Added**: Cohere Command integration
+- ✅ **Improved**: More generous free tier (1000 calls/month vs $5 credits)
+- ✅ **Enhanced**: Cost-effective pricing for production use
 
-### 1. Create OpenAI Account
+### New Setup Guide
 
-1. Go to [platform.openai.com](https://platform.openai.com/)
-2. Click "Sign up" and create your account
-3. Verify your email address
-4. Complete phone number verification
+Please refer to the new **[COHERE_SETUP.md](./COHERE_SETUP.md)** file for current setup instructions.
 
-### 2. Get Free Credits
+### Key Differences
 
-New users receive $5 in free API credits that expire after 3 months. This is usually sufficient for testing and light usage.
+| Feature | Old (OpenAI GPT) | New (Cohere Command) |
+|---------|------------------|---------------------|
+| Provider | OpenAI | Cohere |
+| Model | GPT-3.5-turbo / GPT-4 | Command Light / Command |
+| API Key | `OPENAI_API_KEY` | `COHERE_API_KEY` |
+| Free Tier | $5 credits (expires) | 1000 calls/month (renewable) |
+| Cost | $0.002/1K tokens | $0.15/1M tokens |
+| Response Quality | Excellent | Excellent |
+| Context Understanding | Advanced | Advanced |
 
-### 3. Generate API Key
+### Migration Steps
 
-1. Go to [API Keys](https://platform.openai.com/api-keys)
-2. Click "Create new secret key"
-3. Give it a name like "MCP CV Assistant"
-4. **Copy the API key** (you won't see it again!)
+If you were using the old OpenAI setup:
 
-### 4. Configure Environment
-
-1. Copy `.env.example` to `.env` in the project root:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Add your OpenAI API key to the `.env` file:
+1. **Remove old environment variable**:
    ```env
-   OPENAI_API_KEY=sk-your_api_key_here
+   # Remove this line from your .env file
+   OPENAI_API_KEY=sk-your_openai_key_here
    ```
 
-### 5. Install Dependencies
+2. **Add new Cohere API key**:
+   ```env
+   # Add this line to your .env file
+   COHERE_API_KEY=your_cohere_api_key_here
+   ```
 
-Install the OpenAI package:
+3. **Get Cohere API Key**:
+   - Sign up at [dashboard.cohere.com](https://dashboard.cohere.com/)
+   - Get 1000 free API calls per month
+   - Generate API key from [API Keys page](https://dashboard.cohere.com/api-keys)
 
-```bash
-cd backend
-npm install
-```
+4. **Update dependencies** (if installing manually):
+   ```bash
+   cd backend
+   npm uninstall openai
+   npm install cohere-ai
+   ```
 
-### 6. Test the Configuration
+The chat functionality will work exactly the same way - just with more cost-effective AI!
 
-Run the chat test with AI enabled:
+### Questions?
 
-```bash
-cd backend
-npm run test:chat
-```
-
-You should see OpenAI GPT responses in the output.
-
-## Usage and Costs
-
-### Free Tier
-- **$5 free credits** for new users
-- Credits expire after 3 months
-- Perfect for testing and development
-
-### GPT-3.5-turbo Pricing (After free credits)
-- **$0.0015** per 1K input tokens
-- **$0.002** per 1K output tokens
-- Very affordable for resume chat use cases
-
-### Rate Limits
-- **Free tier**: 3 requests per minute, 200 requests per day
-- **Pay-as-you-go**: 3,500 requests per minute
-
-## Tips for Cost Management
-
-1. **Start with Free Credits** - Use the free $5 credits for development
-2. **Monitor Usage** - Check your usage at [platform.openai.com/usage](https://platform.openai.com/usage)
-3. **Set Usage Limits** - Configure monthly spending limits in your OpenAI account
-4. **Optimize Prompts** - Shorter, more specific prompts use fewer tokens
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Invalid API Key**
-   - Ensure you copied the full API key
-   - Check that the key starts with `sk-`
-   - Make sure the key is in your `.env` file
-
-2. **Rate Limit Exceeded**
-   - Wait a minute and try again
-   - Consider upgrading to a paid plan for higher limits
-
-3. **Insufficient Credits**
-   - Check your usage and add billing information if needed
-   - Free credits expire after 3 months
-
-### Testing Without API Key
-
-The system will automatically fall back to rule-based responses if no API key is provided, so you can still test the basic functionality.
-
-## Security Best Practices
-
-1. **Never commit API keys** - Keep `.env` file out of version control
-2. **Use environment variables** - Never hardcode API keys in source code
-3. **Rotate keys regularly** - Generate new API keys periodically
-4. **Monitor usage** - Watch for unexpected API calls
-
-## Support
-
-- [OpenAI Documentation](https://platform.openai.com/docs)
-- [OpenAI Community Forum](https://community.openai.com/)
-- [API Status Page](https://status.openai.com/)
+- Check the new [COHERE_SETUP.md](./COHERE_SETUP.md) guide
+- See the main [README.md](./readme.md) for updated instructions
+- The rule-based fallback system still works without any API key

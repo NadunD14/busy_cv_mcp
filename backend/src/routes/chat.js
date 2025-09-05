@@ -1,10 +1,10 @@
-import OpenAI from 'openai';
+import { CohereClient } from 'cohere-ai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Initialize OpenAI client
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+// Initialize Cohere client
+const cohere = process.env.COHERE_API_KEY ? new CohereClient({
+    token: process.env.COHERE_API_KEY
 }) : null;
 
 export const chatHandler = {
@@ -26,12 +26,12 @@ export const chatHandler = {
             };
         }
 
-        // If OpenAI is available and requested, use GPT
-        if (useAI && openai) {
+        // If Cohere is available and requested, use Command
+        if (useAI && cohere) {
             try {
-                return await this.generateOpenAIAnswer(parsed, question);
+                return await this.generateCohereAnswer(parsed, question);
             } catch (error) {
-                console.log('OpenAI API error, falling back to rule-based:', error.message || error);
+                console.log('Cohere API error, falling back to rule-based:', error.message || error);
                 // Fall back to rule-based system
             }
         }
@@ -40,23 +40,23 @@ export const chatHandler = {
         return this.generateRuleBasedAnswer(parsed, question);
     },
 
-    async generateOpenAIAnswer(parsed, question) {
+    async generateCohereAnswer(parsed, question) {
         // Create a context from the parsed resume data
         const context = this.buildResumeContext(parsed);
 
         // Validate inputs
         if (!context || context.trim().length < 10) {
-            console.log('OpenAI: Insufficient context, falling back to rule-based');
+            console.log('Cohere: Insufficient context, falling back to rule-based');
             return this.generateRuleBasedAnswer(parsed, question);
         }
 
         if (!question || question.trim().length < 3) {
-            console.log('OpenAI: Invalid question, falling back to rule-based');
+            console.log('Cohere: Invalid question, falling back to rule-based');
             return this.generateRuleBasedAnswer(parsed, question);
         }
 
         try {
-            // Create a prompt for GPT
+            // Create a prompt for Cohere Command
             const prompt = `Based on the following resume information, please answer the user's question accurately and concisely.
 
 Resume Information:
@@ -66,33 +66,24 @@ User Question: ${question}
 
 Please provide a direct, helpful answer based only on the information provided in the resume. If the information is not available in the resume, say so clearly.`;
 
-            const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo", // Using GPT-3.5-turbo (free tier available)
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a helpful assistant that answers questions about resumes. Provide accurate, concise answers based only on the resume information provided. Be friendly and professional."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                max_tokens: 150,
+            const response = await cohere.chat({
+                model: "command-light", // Using Command Light (more cost-effective)
+                message: prompt,
+                maxTokens: 150,
                 temperature: 0.3, // Lower temperature for more consistent answers
-                top_p: 0.9
+                preamble: "You are a helpful assistant that answers questions about resumes. Provide accurate, concise answers based only on the resume information provided. Be friendly and professional."
             });
 
-            if (response && response.choices && response.choices[0] && response.choices[0].message) {
-                const answer = response.choices[0].message.content.trim();
+            if (response && response.text && response.text.trim()) {
+                const answer = response.text.trim();
 
                 // Validate the response
                 if (!answer || answer.length < 5) {
-                    console.log('OpenAI: Empty or too short response, falling back to rule-based');
+                    console.log('Cohere: Empty or too short response, falling back to rule-based');
                     return this.generateRuleBasedAnswer(parsed, question);
                 }
 
-                // Check if GPT said it doesn't have the information
+                // Check if Cohere said it doesn't have the information
                 const noInfoPhrases = [
                     'not provided', 'not available', 'not mentioned', 'not specified',
                     'cannot find', 'unable to find', 'not included', 'not listed'
@@ -103,7 +94,7 @@ Please provide a direct, helpful answer based only on the information provided i
                 );
 
                 if (hasNoInfo) {
-                    console.log('OpenAI: GPT indicated missing information, falling back to rule-based');
+                    console.log('Cohere: Command indicated missing information, falling back to rule-based');
                     return this.generateRuleBasedAnswer(parsed, question);
                 }
 
@@ -117,22 +108,22 @@ Please provide a direct, helpful answer based only on the information provided i
                 return {
                     text: answer,
                     confidence: Math.min(confidence, 0.95),
-                    source: 'openai'
+                    source: 'cohere'
                 };
             } else {
-                console.log('OpenAI: Invalid response format, falling back to rule-based');
+                console.log('Cohere: Invalid response format, falling back to rule-based');
                 return this.generateRuleBasedAnswer(parsed, question);
             }
         } catch (error) {
             // Handle specific error types more gracefully
             if (error.message && error.message.includes('API key')) {
-                console.log('OpenAI: Invalid API key, falling back to rule-based');
+                console.log('Cohere: Invalid API key, falling back to rule-based');
             } else if (error.message && error.message.includes('quota')) {
-                console.log('OpenAI: API quota exceeded, falling back to rule-based');
+                console.log('Cohere: API quota exceeded, falling back to rule-based');
             } else if (error.message && error.message.includes('rate limit')) {
-                console.log('OpenAI: Rate limit exceeded, falling back to rule-based');
+                console.log('Cohere: Rate limit exceeded, falling back to rule-based');
             } else {
-                console.log(`OpenAI: API error (${error.name || 'Unknown'}), falling back to rule-based`);
+                console.log(`Cohere: API error (${error.name || 'Unknown'}), falling back to rule-based`);
             }
 
             // Fall back to rule-based system
@@ -141,7 +132,7 @@ Please provide a direct, helpful answer based only on the information provided i
     },
 
     buildResumeContext(parsed) {
-        // Build a comprehensive context string for OpenAI
+        // Build a comprehensive context string for Cohere
         const contextParts = [];
 
         // Add structured information with clear labels
