@@ -1,40 +1,35 @@
-# MCP CV Assistant 🤖📄
+# CV Assistant - Smart Resume Parser & Chat 🤖📄
 
-A Model Context Protocol (MCP) server that provides AI-powered resume chat functionality and email notifications. Now with **Cohere Command integration** for enhanced chat responses!
+A modern web application that provides AI-powered resume parsing, intelligent chat functionality, and email notifications. Built with **Next.js frontend** and **Express.js backend** with **Cohere Command integration** for enhanced conversations!
 
 ## Features ✨
 
-- **📄 Resume Chat**: Parse your CV/resume and chat about your experience
-- **🤖 AI-Powered Responses**: Optional Cohere Command for smarter, contextual answers
-- **📧 Email Notifications**: Send professional emails with templates
-- **🎨 Next.js Playground**: Modern web interface for easy interaction
-- **🔒 Separate Services**: Frontend and backend properly separated for scalability
-- **⚡ Real-time**: Instant resume parsing and responses
+- **📄 Smart Resume Parsing**: Upload and parse CV/resume files (PDF, DOCX, TXT)
+- **🤖 AI-Powered Chat**: Chat about your resume with Cohere Command integration
+- **📧 Email Notifications**: Send professional emails with SendGrid
+- **🎨 Modern UI**: Clean Next.js interface with Tailwind CSS
+- **⚡ Real-time**: Instant parsing and chat responses
+- **📱 Responsive**: Works on desktop, tablet, and mobile
 
 ## Architecture 🏗️
 
 ### Frontend (Next.js) - Port 3000
-- **API Proxy Layer**: Routes requests to backend server
-- **Client-side Parsing**: PDF, DOCX, TXT file support
-- **Real-time Chat**: With AI toggle for enhanced responses
-- **Email Interface**: Professional templates and composition
-- **Responsive Design**: Tailwind CSS with modern UI
+- **Client-side Parsing**: PDF, DOCX, TXT file support using browser APIs
+- **Resume Chat Interface**: Interactive chat about your CV content
+- **Email Composition**: Professional email templates and sending
+- **Modern UI**: Tailwind CSS with responsive design
 
-### Backend (MCP Server) - Port 3001
-- **Dual Mode Operation**:
-  - HTTP Server: REST API endpoints for frontend
-  - MCP Server: Model Context Protocol for AI clients
-- **Smart Chat System**:
-  - Rule-based responses (fast, always available)
-  - Cohere Command integration (intelligent, contextual question answering)
-- **Multi-provider Email**: SendGrid/MailerSend/Brevo/SMTP support
-- **Resume Parsing**: Structured data extraction
+### Backend (Express.js) - Port 5000
+- **REST API**: Endpoints for chat and email functionality
+- **AI Integration**: Cohere Command for intelligent resume discussions
+- **Email Service**: SendGrid integration for professional emails
+- **Resume Processing**: Advanced text analysis and structured data extraction
 
 ### Service Integration 🔗
 ```
-Frontend (3000) → API Proxy → Backend (3001) → External Services
-                                     ↓
-                               [Cohere Command] [Email APIs]
+Frontend (3000) → API Routes → Backend (5000) → External Services
+                                      ↓
+                               [Cohere Command] [SendGrid Email]
 ```
 
 ## Quick Start 🚀
@@ -42,8 +37,8 @@ Frontend (3000) → API Proxy → Backend (3001) → External Services
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/yourusername/mcp-cv-assistant.git
-cd mcp-cv-assistant
+git clone https://github.com/yourusername/cv-assistant.git
+cd cv-assistant
 
 # Install frontend dependencies
 cd frontend
@@ -56,55 +51,22 @@ npm install
 
 ### 2. Environment Setup
 
-Copy the example environment file:
-```bash
-cp .env.example .env
-```
+Create environment files with your API keys:
 
-Configure your services:
-
-#### Required: Email Provider (choose one)
-
-**Option A: SendGrid (Recommended - 100 emails/day free)**
-1. Sign up at [SendGrid](https://sendgrid.com/)
-2. Complete sender authentication (verify your domain or single sender email)
-3. Get your API key from Settings → API Keys
-4. Update `.env`:
+**Backend Environment** (`backend/.env`):
 ```env
-SENDGRID_API_KEY=your_sendgrid_api_key
-EMAIL_FROM=your_verified_email@domain.com
-EMAIL_FROM_NAME=CV Assistant
-```
-
-📘 **Need help with SendGrid setup?** See the detailed [SendGrid Setup Guide](SENDGRID_SETUP.md)
-
-**Option B: MailerSend (3,000 emails/month free)**
-1. Sign up at [MailerSend](https://www.mailersend.com/)
-2. Verify your domain or use their sandbox
-3. Get your API key from Settings → API Tokens
-4. Update `.env`:
-```env
-MAILERSEND_API_KEY=your_mailersend_api_key
-EMAIL_FROM=your_verified_email@domain.com
-EMAIL_FROM_NAME=CV Assistant
-```
-
-**Option C: Brevo (300 emails/day free)**
-1. Sign up at [Brevo](https://www.brevo.com/)
-2. Get your API key from Account → SMTP & API
-3. Update `.env`:
-```env
-BREVO_API_KEY=your_brevo_api_key
-EMAIL_FROM=your_verified_email@domain.com
-EMAIL_FROM_NAME=CV Assistant
-```
-
-#### Optional: Cohere Command (Enhanced Chat)
-1. Sign up at [Cohere Dashboard](https://dashboard.cohere.com/) - **1000 Free API Calls/Month**
-2. Get your API key from [API Keys](https://dashboard.cohere.com/api-keys)
-3. Update `.env`:
-```env
+SENDGRID_API_KEY=your_sendgrid_api_key_here
 COHERE_API_KEY=your_cohere_api_key_here
+EMAIL_FROM=your_verified_email@gmail.com
+EMAIL_FROM_NAME=CV Assistant Bot
+PORT=5000
+```
+
+> **🔒 Security Note**: Never commit real API keys to GitHub. Keep your actual `.env` files in `.gitignore`.
+
+**Frontend Environment** (`frontend/.env.local`):
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
 ### 3. Run Development Servers
@@ -113,7 +75,7 @@ COHERE_API_KEY=your_cohere_api_key_here
 # Terminal 1: Backend (MUST start first)
 cd backend
 npm run dev
-# Backend runs on http://localhost:3001
+# Backend runs on http://localhost:5000
 
 # Terminal 2: Frontend
 cd frontend  
@@ -121,41 +83,26 @@ npm run dev
 # Frontend runs on http://localhost:3000
 ```
 
-### 4. Test Connection
+### 4. Test the Application
 
-```bash
-# Test backend directly
-cd backend
-node test-connection.js
-
-# Test frontend-to-backend
-curl http://localhost:3000/api/chat -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"parsedJson":{"skills":["JavaScript"]},"question":"What skills do I have?"}'
-```
-
-Visit `http://localhost:3000` to use the application!
+Visit `http://localhost:3000` and:
+1. Upload a resume file
+2. Wait for parsing to complete
+3. Start chatting about your CV!
 
 ## Usage Guide 📖
 
 ### 1. Upload Your Resume
 1. Visit `http://localhost:3000`
 2. Drag & drop or click to upload your CV (PDF, DOCX, or TXT)
-3. Wait for client-side parsing to complete
+3. The system will parse your resume using client-side libraries
 4. Review the extracted information displayed
 
 ### 2. Chat About Your Resume
-**Two Response Modes:**
-
-**📋 Rule-based (Default - Fast)**
-- Instant responses using pattern matching
-- Always available, no API key needed
-- Good for basic questions
-
-**🤖 AI-powered (Toggle ON for smarter responses)**
-- Uses Cohere Command for contextual question answering
-- Requires `COHERE_API_KEY` in environment
-- Better for complex or nuanced questions
+**AI-Powered Conversations with Cohere Command:**
+- Ask questions about your experience, skills, education
+- Get intelligent responses based on your resume content
+- Natural language processing for better understanding
 
 **Sample Questions:**
 - "What role did I have at my last position?"
@@ -163,81 +110,24 @@ Visit `http://localhost:3000` to use the application!
 - "Tell me about my education background"
 - "How many years of experience do I have?"
 - "What projects have I worked on?"
+- "Summarize my work experience"
 
 ### 3. Send Professional Emails
-1. Use built-in templates (introduction, follow-up, thank you)
-2. Customize recipient, subject, and message
-3. Click send (requires email service configuration)
+1. Use the email interface to compose messages
+2. Choose from built-in templates (introduction, follow-up, thank you)
+3. Customize recipient, subject, and message
+4. Send directly through SendGrid integration
 
-### 4. Technical Flow
+### 4. Application Flow
 ```
-1. Upload Resume → Client-side parsing (frontend)
-2. Ask Question → Frontend /api/chat → Backend chat API → Response
-3. Send Email → Frontend /api/send-email → Backend email API → Email Service
-```
-
-## Connection Architecture 🔗
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Frontend      │────▶│   Backend       │────▶│  External APIs  │
-│   (Port 3000)   │     │   (Port 3001)   │     │                 │
-├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ • UI/UX         │     │ • REST API      │     │ • Cohere Command│
-│ • File parsing  │     │ • MCP Server    │     │ • SendGrid      │
-│ • API proxy     │     │ • Business Logic│     │ • MailerSend    │
-│                 │     │                 │     │ • Brevo         │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+1. Upload Resume → Client-side parsing (PDF.js, Mammoth.js)
+2. Ask Question → Frontend → Backend /api/chat → Cohere Command → AI Response
+3. Send Email → Frontend → Backend /api/email → SendGrid → Email Delivered
 ```
 
-**API Endpoints:**
-- `POST /api/chat` - Chat about resume (with optional Cohere Command)
-- `POST /api/send-email` - Send email notifications  
-- `POST /api/parse` - Parse resume text (proxied to backend)
-- `GET /health` - Backend health check
+## API Endpoints 🔗
 
-## Deployment 🌐
-
-### Frontend (Vercel - Free)
-
-1. Push your code to GitHub
-2. Connect to [Vercel](https://vercel.com/)
-3. Deploy with these settings:
-   - Framework Preset: Next.js
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-
-### Backend (Railway - Free Tier)
-
-1. Connect to [Railway](https://railway.app/)
-2. Deploy from GitHub
-3. Add environment variables
-4. Set start command: `npm start`
-
-### Alternative: Docker Deployment
-
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Or individual services
-docker build -t mcp-frontend ./frontend
-docker build -t mcp-backend ./backend
-```
-
-## API Reference 📚
-
-### REST Endpoints
-
-#### Parse Resume
-```http
-POST /api/parse
-Content-Type: application/json
-
-{
-  "text": "resume text content..."
-}
-```
+### Backend Routes (Port 5000)
 
 #### Chat with Resume
 ```http
@@ -245,115 +135,181 @@ POST /api/chat
 Content-Type: application/json
 
 {
-  "parsedJson": { /* parsed resume object */ },
-  "question": "What role did I have at my last position?"
+  "resume_text": "parsed resume content...",
+  "question": "What skills do I have?"
 }
 ```
 
 #### Send Email
 ```http
-POST /api/send-email
+POST /api/email
 Content-Type: application/json
-x-api-key: your_api_key
 
 {
   "to": "recipient@example.com",
   "subject": "Email subject",
-  "body": "Email content"
+  "message": "Email content",
+  "template": "professional" // optional
 }
 ```
 
-### MCP Tools
+#### Health Check
+```http
+GET /health
+```
 
-When running as an MCP server (`npm start -- --mcp`):
+### Frontend API Routes (Port 3000)
 
-- `parse_resume`: Parse resume text into structured data
-- `chat_about_resume`: Answer questions about parsed resume
-- `send_email`: Send email notifications
+#### Proxy to Backend Chat
+```http
+POST /api/chat
+```
+
+#### Proxy to Backend Email
+```http
+POST /api/send-email
+```
 
 ## Configuration ⚙️
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SENDGRID_API_KEY` | SendGrid API key | One email provider |
-| `MAILERSEND_API_KEY` | MailerSend API key | One email provider |
-| `BREVO_API_KEY` | Brevo API key | One email provider |
-| `EMAIL_FROM` | Verified sender email | Yes |
-| `EMAIL_FROM_NAME` | Sender name | No |
-| `API_KEY` | Security key for emails | No |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | No |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | No |
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `SENDGRID_API_KEY` | SendGrid API key for emails | Yes | `SG.xxx...` |
+| `COHERE_API_KEY` | Cohere Command API key | Yes | `OrKO3...` |
+| `EMAIL_FROM` | Verified sender email | Yes | `your@email.com` |
+| `EMAIL_FROM_NAME` | Sender display name | No | `CV Assistant Bot` |
+| `PORT` | Backend server port | No | `5000` |
+| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | Yes | `http://localhost:5000` |
 
-### Email Provider Setup
+### Service Setup
 
-#### MailerSend Setup
-1. Create account at [MailerSend](https://www.mailersend.com/)
-2. Add and verify your domain
-3. Create API token with "Email" permission
-4. Set `EMAIL_FROM` to verified email address
+#### SendGrid Email Service
+- ✅ **Already configured** with your API key
+- Sender email: Use your verified email address
+- Make sure this email is verified in your SendGrid account
 
-#### Brevo Setup
-1. Create account at [Brevo](https://www.brevo.com/)
-2. Go to SMTP & API settings
-3. Create API key
-4. Verify sender email address
+#### Cohere Command AI
+- ✅ **Already configured** with your API key
+- Provides intelligent chat responses about resume content
+- Free tier: 1000 API calls per month
 
 ## File Structure 📁
 
 ```
-mcp-cv-assistant/
+cv-assistant/
 ├── frontend/                 # Next.js application
 │   ├── components/          # React components
-│   ├── lib/                # Utilities and helpers
-│   ├── pages/              # Next.js pages and API routes
-│   │   ├── api/           # API endpoints
-│   │   └── index.js       # Main page
-│   └── styles/            # CSS styles
-├── backend/                # MCP server
+│   ├── lib/                # Resume parsing utilities
+│   ├── pages/              # Next.js pages
+│   │   ├── api/           # API proxy routes
+│   │   └── index.js       # Main application page
+│   ├── styles/            # Tailwind CSS
+│   └── package.json       # Frontend dependencies
+├── backend/                # Express.js server
 │   ├── src/               # Source code
-│   │   ├── routes/        # Route handlers
+│   │   ├── routes/        # API route handlers
+│   │   ├── services/      # Email and AI services
 │   │   └── index.js       # Main server file
-│   └── package.json       # Dependencies
+│   └── package.json       # Backend dependencies
 ├── docker-compose.yml     # Docker configuration
 └── README.md             # This file
 ```
+
+## Deployment 🌐
+
+### Frontend Deployment (Vercel - Free)
+
+1. Push code to GitHub
+2. Connect to [Vercel](https://vercel.com/)
+3. Set environment variables:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-backend-url.com
+   ```
+
+### Backend Deployment (Railway/Render - Free)
+
+1. Connect to [Railway](https://railway.app/) or [Render](https://render.com/)
+2. Set environment variables (all the ones from backend/.env)
+3. Deploy from GitHub
+
+### Docker Deployment
+
+```bash
+# Build and run both services
+docker-compose up --build
+
+# Frontend will be on port 3000
+# Backend will be on port 5000
+```
+
+## Tech Stack 🛠️
+
+### Frontend
+- **Next.js 14** - React framework
+- **Tailwind CSS** - Styling
+- **PDF.js** - PDF parsing
+- **Mammoth.js** - DOCX parsing
+- **React Hook Form** - Form handling
+
+### Backend
+- **Express.js** - Node.js server
+- **Cohere SDK** - AI chat integration
+- **SendGrid** - Email service
+- **CORS** - Cross-origin requests
+- **Multer** - File upload handling
+
+### External Services
+- **Cohere Command** - AI language model
+- **SendGrid** - Email delivery platform
 
 ## Troubleshooting 🔧
 
 ### Common Issues
 
-#### Resume Parsing Fails
-- Ensure file is under 10MB
-- Try PDF format for best results
-- Check browser console for errors
+#### Resume Upload Fails
+- Check file size (should be under 10MB)
+- Ensure file format is supported (PDF, DOCX, TXT)
+- Try using PDF format for best results
+
+#### Chat Not Working
+- Verify Cohere API key is set correctly
+- Check backend console for error messages
+- Ensure backend is running on port 5000
 
 #### Email Not Sending
-- Verify email provider setup
-- Check API key and sender email
-- Ensure sender email is verified
-- Check rate limits (MailerSend: 3k/month, Brevo: 300/day)
+- Verify SendGrid API key
+- Ensure sender email is verified in SendGrid
+- Check SendGrid dashboard for delivery status
 
-#### MCP Connection Issues
-- Ensure stdio transport is properly configured
-- Check MCP client compatibility
-- Verify tool schemas are correct
+#### CORS Errors
+- Make sure backend is running before frontend
+- Check NEXT_PUBLIC_API_URL is set correctly
 
-### Debug Mode
+### Debug Tips
 
-Enable verbose logging:
 ```bash
-DEBUG=mcp:* npm run dev
+# Check backend logs
+cd backend
+npm run dev
+
+# Check frontend logs
+cd frontend
+npm run dev
+
+# Test backend directly
+curl http://localhost:5000/health
 ```
 
 ## Contributing 🤝
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature/new-feature`
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Commit: `git commit -m "Add new feature"`
+5. Push: `git push origin feature/new-feature`
+6. Submit a pull request
 
 ## License 📄
 
@@ -362,18 +318,19 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support 💬
 
 - Create an issue for bug reports
-- Check existing issues before posting
-- Include environment details and error logs
+- Include error logs and environment details
+- Check existing issues before posting new ones
 
-## Roadmap 🗺️
+## Future Enhancements 🚀
 
-- [ ] Enhanced resume parsing with AI
 - [ ] Multiple file upload support
-- [ ] Email templates management
-- [ ] Analytics dashboard
+- [ ] Resume comparison features
+- [ ] Job matching suggestions
+- [ ] Export parsed data to JSON/CSV
+- [ ] Resume optimization recommendations
 - [ ] Integration with job boards
 - [ ] Mobile app version
 
 ---
 
-Built with ❤️ using Model Context Protocol, Next.js, and free-tier services.
+Built with using Next.js, Express.js, Cohere Command, and SendGrid.
