@@ -215,8 +215,8 @@ app.use(helmet());
 app.use(cors({
     origin: [
         'http://localhost:3000',
-        'https://busy-cv.vercel.app',
-        'https://busy-cv-backend.fly.dev',
+        'https://*.vercel.app',
+        'https://*.railway.app',
         process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true
