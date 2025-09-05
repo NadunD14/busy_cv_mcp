@@ -63,9 +63,9 @@ async function testChatResponses() {
         }
     }
 
-    // Test DistilBERT AI if available
-    if (process.env.HUGGINGFACE_API_TOKEN) {
-        console.log('\n\n🤖 Testing DistilBERT AI Responses (useAI = true):');
+    // Test OpenAI GPT if available
+    if (process.env.OPENAI_API_KEY) {
+        console.log('\n\n🤖 Testing OpenAI GPT Responses (useAI = true):');
         console.log('='.repeat(60));
 
         for (const question of testQuestions.slice(0, 3)) { // Test first 3 questions only
@@ -75,16 +75,23 @@ async function testChatResponses() {
                 console.log(`✅ Answer: ${response.text}`);
                 console.log(`📊 Confidence: ${(response.confidence * 100).toFixed(0)}%`);
                 console.log(`🔧 Source: ${response.source}`);
+
+                if (response.source === 'openai') {
+                    console.log(`🎯 OpenAI GPT successfully provided answer!`);
+                } else if (response.source === 'rule-based') {
+                    console.log(`⚠️  AI fell back to rule-based system`);
+                }
             } catch (error) {
                 console.log(`\n❓ Question: "${question}"`);
                 console.log(`❌ Error: ${error.message}`);
             }
         }
     } else {
-        console.log('\n\n🤖 DistilBERT AI Testing Skipped');
+        console.log('\n\n🤖 OpenAI GPT Testing Skipped');
         console.log('='.repeat(60));
-        console.log('💡 To test AI responses, set HUGGINGFACE_API_TOKEN in your .env file');
-        console.log('🔗 Get a free API token at: https://huggingface.co/settings/tokens');
+        console.log('💡 To test AI responses, set OPENAI_API_KEY in your .env file');
+        console.log('🔗 Get your API key at: https://platform.openai.com/api-keys');
+        console.log('📋 Copy .env.example to .env and add your API key');
     }
 
     console.log('\n\n🎯 Test Results Summary:');
@@ -93,10 +100,10 @@ async function testChatResponses() {
     console.log('✅ Name extraction enhanced');
     console.log('✅ Fallback logic optimized');
 
-    if (process.env.HUGGINGFACE_API_TOKEN) {
-        console.log('✅ DistilBERT AI-powered responses tested');
+    if (process.env.OPENAI_API_KEY) {
+        console.log('✅ OpenAI GPT-powered responses tested');
     } else {
-        console.log('⚠️  DistilBERT AI-powered responses not tested (no API token)');
+        console.log('⚠️  OpenAI GPT-powered responses not tested (no API key)');
     }
 }
 

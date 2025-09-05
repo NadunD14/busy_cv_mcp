@@ -1,18 +1,37 @@
-import { HfInference } from '@huggingface/inference';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Initialize Hugging Face client
-const hf = process.env.HUGGINGFACE_API_TOKEN ? new HfInference(process.env.HUGGINGFACE_API_TOKEN) : null;
+// Initialize OpenAI client
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+}) : null;
 
 export const chatHandler = {
     async generateAnswer(parsed, question, useAI = false) {
-        // If Hugging Face is available and requested, use DistilBERT
-        if (useAI && hf) {
+        // Validate inputs
+        if (!parsed || typeof parsed !== 'object') {
+            return {
+                text: "I couldn't process the resume data. Please ensure a valid resume is uploaded.",
+                confidence: 0.1,
+                source: 'error'
+            };
+        }
+
+        if (!question || typeof question !== 'string' || question.trim().length === 0) {
+            return {
+                text: "Please ask a specific question about the resume.",
+                confidence: 0.1,
+                source: 'error'
+            };
+        }
+
+        // If OpenAI is available and requested, use GPT
+        if (useAI && openai) {
             try {
-                return await this.generateDistilBERTAnswer(parsed, question);
+                return await this.generateOpenAIAnswer(parsed, question);
             } catch (error) {
-                console.error('DistilBERT AI error, falling back to rule-based:', error);
+                console.log('OpenAI API error, falling back to rule-based:', error.message || error);
                 // Fall back to rule-based system
             }
         }
@@ -21,91 +40,173 @@ export const chatHandler = {
         return this.generateRuleBasedAnswer(parsed, question);
     },
 
-    async generateDistilBERTAnswer(parsed, question) {
+    async generateOpenAIAnswer(parsed, question) {
         // Create a context from the parsed resume data
         const context = this.buildResumeContext(parsed);
 
+        // Validate inputs
+        if (!context || context.trim().length < 10) {
+            console.log('OpenAI: Insufficient context, falling back to rule-based');
+            return this.generateRuleBasedAnswer(parsed, question);
+        }
+
+        if (!question || question.trim().length < 3) {
+            console.log('OpenAI: Invalid question, falling back to rule-based');
+            return this.generateRuleBasedAnswer(parsed, question);
+        }
+
         try {
-            // Use DistilBERT for question answering
-            const response = await hf.questionAnswering({
-                model: 'distilbert-base-uncased-distilled-squad',
-                inputs: {
-                    question: question,
-                    context: context
-                }
+            // Create a prompt for GPT
+            const prompt = `Based on the following resume information, please answer the user's question accurately and concisely.
+
+Resume Information:
+${context}
+
+User Question: ${question}
+
+Please provide a direct, helpful answer based only on the information provided in the resume. If the information is not available in the resume, say so clearly.`;
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo", // Using GPT-3.5-turbo (free tier available)
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a helpful assistant that answers questions about resumes. Provide accurate, concise answers based only on the resume information provided. Be friendly and professional."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                max_tokens: 150,
+                temperature: 0.3, // Lower temperature for more consistent answers
+                top_p: 0.9
             });
 
-            // Validate and format the response
-            if (response && response.answer && response.answer.trim()) {
-                const confidence = response.score || 0.5; // DistilBERT provides confidence scores
+            if (response && response.choices && response.choices[0] && response.choices[0].message) {
+                const answer = response.choices[0].message.content.trim();
 
-                // Post-process the answer for better formatting
-                let answer = response.answer.trim();
-
-                // If it's a name question and answer looks like a name, format it properly
-                if (question.toLowerCase().includes('name') && answer.length > 0) {
-                    // Capitalize properly if it's a name
-                    answer = answer.split(' ').map(word =>
-                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join(' ');
-                    answer = `Your name is ${answer}`;
+                // Validate the response
+                if (!answer || answer.length < 5) {
+                    console.log('OpenAI: Empty or too short response, falling back to rule-based');
+                    return this.generateRuleBasedAnswer(parsed, question);
                 }
+
+                // Check if GPT said it doesn't have the information
+                const noInfoPhrases = [
+                    'not provided', 'not available', 'not mentioned', 'not specified',
+                    'cannot find', 'unable to find', 'not included', 'not listed'
+                ];
+
+                const hasNoInfo = noInfoPhrases.some(phrase =>
+                    answer.toLowerCase().includes(phrase)
+                );
+
+                if (hasNoInfo) {
+                    console.log('OpenAI: GPT indicated missing information, falling back to rule-based');
+                    return this.generateRuleBasedAnswer(parsed, question);
+                }
+
+                // Calculate confidence based on response characteristics
+                let confidence = 0.8;
+
+                // Higher confidence for specific, detailed answers
+                if (answer.length > 50) confidence += 0.1;
+                if (answer.includes(parsed.name || '')) confidence += 0.05;
 
                 return {
                     text: answer,
-                    confidence: Math.min(confidence, 0.95), // Cap confidence at 95%
-                    source: 'distilbert'
+                    confidence: Math.min(confidence, 0.95),
+                    source: 'openai'
                 };
             } else {
-                // If DistilBERT can't find a good answer, fall back to rule-based
-                console.log('DistilBERT returned low confidence answer, falling back to rule-based');
+                console.log('OpenAI: Invalid response format, falling back to rule-based');
                 return this.generateRuleBasedAnswer(parsed, question);
             }
         } catch (error) {
-            console.error('DistilBERT API error:', error);
+            // Handle specific error types more gracefully
+            if (error.message && error.message.includes('API key')) {
+                console.log('OpenAI: Invalid API key, falling back to rule-based');
+            } else if (error.message && error.message.includes('quota')) {
+                console.log('OpenAI: API quota exceeded, falling back to rule-based');
+            } else if (error.message && error.message.includes('rate limit')) {
+                console.log('OpenAI: Rate limit exceeded, falling back to rule-based');
+            } else {
+                console.log(`OpenAI: API error (${error.name || 'Unknown'}), falling back to rule-based`);
+            }
+
             // Fall back to rule-based system
             return this.generateRuleBasedAnswer(parsed, question);
         }
     },
 
     buildResumeContext(parsed) {
-        // Build a comprehensive context string for DistilBERT
+        // Build a comprehensive context string for OpenAI
         const contextParts = [];
 
-        if (parsed.name) {
-            contextParts.push(`Name: ${parsed.name}`);
+        // Add structured information with clear labels
+        if (parsed.name && parsed.name.trim()) {
+            contextParts.push(`Full Name: ${parsed.name.trim()}`);
         }
 
-        if (parsed.email) {
-            contextParts.push(`Email: ${parsed.email}`);
+        if (parsed.email && parsed.email.trim()) {
+            contextParts.push(`Email Address: ${parsed.email.trim()}`);
         }
 
-        if (parsed.phone) {
-            contextParts.push(`Phone: ${parsed.phone}`);
+        if (parsed.phone && parsed.phone.trim()) {
+            contextParts.push(`Phone Number: ${parsed.phone.trim()}`);
         }
 
-        if (parsed.skills && parsed.skills.length > 0) {
-            contextParts.push(`Skills: ${parsed.skills.join(', ')}`);
+        if (parsed.skills && Array.isArray(parsed.skills) && parsed.skills.length > 0) {
+            const skillsText = parsed.skills.filter(skill => skill && skill.trim()).join(', ');
+            if (skillsText) {
+                contextParts.push(`Technical Skills and Technologies: ${skillsText}`);
+            }
         }
 
-        if (parsed.education && parsed.education.length > 0) {
-            contextParts.push(`Education: ${parsed.education.join('. ')}`);
+        if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
+            const educationText = parsed.education.filter(edu => edu && edu.trim()).join('. ');
+            if (educationText) {
+                contextParts.push(`Educational Background: ${educationText}`);
+            }
         }
 
-        if (parsed.jobs && parsed.jobs.length > 0) {
-            contextParts.push(`Work Experience: ${parsed.jobs.join('. ')}`);
+        if (parsed.jobs && Array.isArray(parsed.jobs) && parsed.jobs.length > 0) {
+            const jobsText = parsed.jobs.filter(job => job && job.trim()).join('. ');
+            if (jobsText) {
+                contextParts.push(`Work Experience and Projects: ${jobsText}`);
+            }
         }
 
         // Add raw text as additional context if available
-        if (parsed.raw) {
-            // Limit raw text to avoid context overflow (DistilBERT has input limits)
-            const rawText = parsed.raw.length > 1000
-                ? parsed.raw.substring(0, 1000) + '...'
-                : parsed.raw;
-            contextParts.push(`Additional Information: ${rawText}`);
+        if (parsed.raw && typeof parsed.raw === 'string' && parsed.raw.trim()) {
+            // Clean up the raw text
+            let rawText = parsed.raw.trim();
+
+            // Remove excessive whitespace and newlines
+            rawText = rawText.replace(/\s+/g, ' ');
+
+            // OpenAI can handle larger contexts than DistilBERT
+            const maxRawLength = 1500;
+            if (rawText.length > maxRawLength) {
+                rawText = rawText.substring(0, maxRawLength) + '...';
+            }
+
+            // Only add if it contains useful information
+            if (rawText.length > 50) {
+                contextParts.push(`Additional Resume Information: ${rawText}`);
+            }
         }
 
-        return contextParts.join('. ');
+        const finalContext = contextParts.join('\n');
+
+        // Ensure context is not empty and has minimum useful content
+        if (finalContext.length < 20) {
+            console.log('Warning: Insufficient context for OpenAI');
+            return null;
+        }
+
+        return finalContext;
     },
 
     generateRuleBasedAnswer(parsed, question) {
