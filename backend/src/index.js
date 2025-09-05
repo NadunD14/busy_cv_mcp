@@ -11,7 +11,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { chatHandler } from './routes/chat.js';
-import { emailHandler } from './routes/email.js';
 import { parseHandler } from './routes/parse.js';
 import mailerService from './services/mailer.js';
 
