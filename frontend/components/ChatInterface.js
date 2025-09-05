@@ -65,7 +65,6 @@ const ChatInterface = ({ parsedResume }) => {
     };
 
     const quickQuestions = [
-        "What role did I have at my last position?",
         "What are my key skills?",
         "What's my contact information?",
         "Tell me about my work experience",
