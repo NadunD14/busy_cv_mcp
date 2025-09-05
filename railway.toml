@@ -1,12 +1,7 @@
 [build]
-builder = "nixpacks"
-buildCommand = "cd backend && npm install --production"
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
 
 [deploy]
-startCommand = "cd backend && node src/index.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-
-[env]
-NODE_ENV = "production"
-PORT = "3001"
